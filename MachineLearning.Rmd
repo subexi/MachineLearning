@@ -1,0 +1,130 @@
+---
+title: "Practical Machine Learning: Coursera Course Project"
+author: "Helmut Dittrich"
+date: "June 2016"
+output: html_document
+---
+
+## Practical Machine Learning Project: Prediction Assignment Writeup
+### Background
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: <http://groupware.les.inf.puc-rio.br/har> (see the section on the Weight Lifting Exercise Dataset).
+
+### Data
+The training data for this project are available here: 
+<https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv>  
+The test data are available here: <https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv>  
+The data for this project come from this source: <http://groupware.les.inf.puc-rio.br/har>.  
+The data has been downloaded into the current working directory for easy access
+
+### Objective
+The goal of your project is to predict the manner in which they did the exercise. This is the "classe" variable in the training set. You may use any of the other variables to predict with. You should create a report describing how you built your model, how you used cross validation, what you think the expected out of sample error is, and why you made the choices you did. You will also use your prediction model to predict 20 different test cases. 
+
+## Load Libraries
+```{r}
+options(warn = -1)
+library(caret)
+library(randomForest)
+library(Hmisc) # to support the data analysis
+library(foreach) # to reduce processing time of randowm forests
+library(doParallel) # by optimizing operation
+library(rpart)
+library(rpart.plot)
+```  
+## Read the Data
+```{r}
+set.seed(1234) # set seed to be reproductible
+training_data <- read.csv("pml-training.csv") 
+testing_data <- read.csv("pml-testing.csv")
+```
+
+## Analyze the Data
+Hide results because they need a lot of space
+```{r, results='hide'}
+str(training_data)
+head(training_data)
+describe(training_data)
+```
+The analysis shows that the training_data:  
+  1. Contain a number of numeric data as factors because of characters like "#DIV/0!" and blanks.   
+  2. A lot of missing data.    
+
+## Clean the Data
+Load the data again and indicate the dubious data as NA
+```{r}
+training_data <- read.csv("pml-training.csv", na.strings=c("#DIV/0!"," ", "", "NA", "NAs", "NULL"))
+testing_data <- read.csv("pml-testing.csv", na.strings=c("#DIV/0!"," ", "", "NA", "NAs", "NULL"))
+```
+We ignore the first 7 columns because they contain names, time_stamps etc. and change the columns 8 to end into numeric values.
+```{r}
+train_c <- training_data
+for(i in c(8:ncol(train_c)-1)) {train_c[,i] = as.numeric(as.character(train_c[,i]))}
+test_c <- testing_data
+for(i in c(8:ncol(test_c)-1)) {test_c[,i] = as.numeric(as.character(test_c[,i]))}
+```
+As predictors we only want the columns without any missing values and we don't want any useless columns as predictors like the first 7. These are "X", "user_name", timestamps, "new_window" and "num_window".  
+Get the names of the predictor columns
+```{r}
+predictor_names_tr <- colnames(train_c[colSums(is.na(train_c)) == 0])[-(1:7)]
+predictor_names_te <- colnames(test_c[colSums(is.na(test_c)) == 0])[-(1:7)]
+predictor_names_tr
+```
+Subset the primary dataset train_c to include only the predictors and the outcome variable classe.
+```{r}
+predictors_tr <- train_c[predictor_names_tr]
+pml_test_clean <- test_c[predictor_names_te]
+```
+## Data Partitioning and Prediction Process
+```{r}
+inTraining <- createDataPartition(y=predictors_tr$classe, p=3/4, list=FALSE)
+training <- predictors_tr[inTraining,]
+testing <- predictors_tr[-inTraining,]
+```
+We now build 5 random forests with 150 trees each. We make use of parallel processing to build this model. Several examples were found of how to perform parallel processing with random forests in R. This provided a great speedup.
+```{r}
+registerDoParallel()
+model <- foreach(ntree=rep(150, 4), .combine=randomForest::combine) %dopar% randomForest(training[-ncol(training)], training$classe, ntree=ntree)
+```
+## Decision Tree
+```{r}
+treeModel <- rpart(classe ~ ., data=training, method="class")
+prp(treeModel)
+
+```  
+
+## Evaluate the Model 
+We use the confusionmatrix method to evaluate the model focusing on accuracy.  
+Applying to the training data.
+```{r}
+predictions_tr <- predict(model, newdata=training)
+confusionMatrix(predictions_tr,training$classe)
+```
+Applying to the testing data
+```{r}
+predictions_te <- predict(model, newdata=testing)
+confusionMatrix(predictions_te,testing$classe)
+```
+As seen as a result of the confusionmatrix, the model for the testing data is fine and efficient with an accuracy of 0.9963 and good values for sensitivity (lowest value 0.9926 for class B) and specificity (lowest value 0.9980 for class A).  
+
+## Preparation for the Submission
+Using the code provided by COURSERA
+```{r}
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+```
+## Applying the Prediction Model
+Get the result for the pml-tesing dataset
+```{r}
+pred_testing <- predict(model, newdata=pml_test_clean)
+#pred_testing
+```
+Write the result for each case into files
+```{r}
+#pml_write_files(pred_testing)
+```
+## Conclusion
+Applying the Random Forest model to the pml-testing dataset to predict the 20 quiz results shows a 100% accuracy.
