@@ -289,33 +289,33 @@ confusionMatrix(predictions_te,testing$classe)</code></pre>
 ## 
 ##           Reference
 ## Prediction    A    B    C    D    E
-##          A 1395    4    0    0    0
-##          B    0  944   11    0    0
-##          C    0    1  842    7    0
-##          D    0    0    2  797    0
+##          A 1395    2    0    0    0
+##          B    0  945   10    0    0
+##          C    0    2  844    6    0
+##          D    0    0    1  798    0
 ##          E    0    0    0    0  901
 ## 
 ## Overall Statistics
 ##                                           
-##                Accuracy : 0.9949          
-##                  95% CI : (0.9925, 0.9967)
+##                Accuracy : 0.9957          
+##                  95% CI : (0.9935, 0.9973)
 ##     No Information Rate : 0.2845          
 ##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
 ##                                           
-##                   Kappa : 0.9936          
+##                   Kappa : 0.9946          
 ##  Mcnemar's Test P-Value : NA              
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity            1.0000   0.9947   0.9848   0.9913   1.0000
-## Specificity            0.9989   0.9972   0.9980   0.9995   1.0000
-## Pos Pred Value         0.9971   0.9885   0.9906   0.9975   1.0000
-## Neg Pred Value         1.0000   0.9987   0.9968   0.9983   1.0000
+## Sensitivity            1.0000   0.9958   0.9871   0.9925   1.0000
+## Specificity            0.9994   0.9975   0.9980   0.9998   1.0000
+## Pos Pred Value         0.9986   0.9895   0.9906   0.9987   1.0000
+## Neg Pred Value         1.0000   0.9990   0.9973   0.9985   1.0000
 ## Prevalence             0.2845   0.1935   0.1743   0.1639   0.1837
-## Detection Rate         0.2845   0.1925   0.1717   0.1625   0.1837
-## Detection Prevalence   0.2853   0.1947   0.1733   0.1629   0.1837
-## Balanced Accuracy      0.9994   0.9960   0.9914   0.9954   1.0000</code></pre>
+## Detection Rate         0.2845   0.1927   0.1721   0.1627   0.1837
+## Detection Prevalence   0.2849   0.1947   0.1737   0.1629   0.1837
+## Balanced Accuracy      0.9997   0.9966   0.9926   0.9961   1.0000</code></pre>
 <p>As seen as a result of the confusionmatrix, the model for the testing data is fine and efficient with an accuracy of 0.9963 and good values for sensitivity (lowest value 0.9926 for class B) and specificity (lowest value 0.9980 for class A).</p>
 </div>
 <div id="preparation-for-the-submission" class="section level2">
